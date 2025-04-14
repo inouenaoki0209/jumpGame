@@ -1,20 +1,22 @@
 //@ts-ignore
 import {Stage, Shape, Ticker, Tween, Ease, Container} from 'createjs-module';
 import {stepColorChoiceRand} from './RandMarker';
+import * as trace_events from 'node:trace_events';
 
-type StepColorType = 'brown' | 'green'
+type StepColorType = 'brown' | 'green';
+type stepType = { step: Container, isAshiba: boolean }
 
 export class GamePage extends Container {
     private readonly STEP_FIELD_WIDTH = 70;
     private readonly STEP_FIELD_HIGH = 20;
     private readonly PLAYER_SIZE = 20;
     private readonly FIELD_POS = {x: 90, y: 370};
-    private MAX_STEP_LEN = 7;
+    private MAX_STEP_LEN = 9;
 //  背景
     private _bg: Shape = new Shape();
     private _canvas: HTMLCanvasElement;
     private gameStage: Stage;
-    private _stepList: Array<createjs.Container> = [];
+    private _stepList: Array<stepType> = [];
     private _player = new Shape();
     private _playerContainer = new Container();
     private _oneJumpBtn = document.getElementById('oneStepBtn') as HTMLButtonElement;
@@ -66,11 +68,11 @@ export class GamePage extends Container {
         const createBlankStep = (): StepColorType => {
 // ランダム値が0なら空白stepを作成
             if (!stepColorChoiceRand()) {
-//                boolがすでにtrue(直前が空白)ならstep有を返す
+// boolがすでにtrue(直前が空白)ならstep有を返す
                 if (this._isBlankStep) {
                     this._isBlankStep = false;
                     return 'brown';
-                }else{
+                } else {
                     this._isBlankStep = true;
                     return 'green';
                 }
@@ -83,9 +85,13 @@ export class GamePage extends Container {
         stepField.graphics.beginFill(this.STEP_COLOR).drawRect(0, 0, this.STEP_FIELD_WIDTH, this.STEP_FIELD_HIGH);
         stepContainer.addChild(stepField);
         this.gameStage.addChild(stepContainer);
-        this._stepList.push(stepContainer);
-        this._stepList[index].y = this.FIELD_POS.y;
-        this._stepList[index].x = this.FIELD_POS.x * index + 10;
+        if (this.STEP_COLOR === 'brown') {
+            this._stepList.push({step: stepContainer, isAshiba: true});
+        } else if (this.STEP_COLOR === 'green') {
+            this._stepList.push({step: stepContainer, isAshiba: false});
+        }
+        this._stepList[index].step.y = this.FIELD_POS.y;
+        this._stepList[index].step.x = this.FIELD_POS.x * index + 10;
     };
     private setStepField = () => {
         while (this._stepList.length < this.MAX_STEP_LEN) {
@@ -93,27 +99,78 @@ export class GamePage extends Container {
             this.createStepField(index);
         }
     };
+    /**
+     * プレイヤージャンプ
+     * 一段とび/二段とび
+     */
+
     private playerJumpEvent = () => {
         this._oneJumpBtn.addEventListener('click', () => {
             this._oneJumpBtn.disabled = true;
             this.moveField();
+            window.console.log(this._stepList);
             Tween.get(this._playerContainer)
                 .to({x: this._playerContainer.x - 10}, 100)
                 .to({y: this._playerContainer.y - this.STEP_FIELD_HIGH * 5}, 200, Ease.cubicInOut)
                 .to({x: this._playerContainer.x, y: this.FIELD_POS.y + -this.STEP_FIELD_HIGH}, 300, Ease.cubicIn)
-                .call(() => this._oneJumpBtn.disabled = false);
+                .call(() => {
+//                    Tween.removeTweens(this._playerContainer);
+//                    if (!this._stepList[1].isAshiba) {
+//                        Tween.get(this._playerContainer)
+//                            .to({y: 600}, 400);
+//                    } else {
+                        this._oneJumpBtn.disabled = false;
+//                    }
+                });
+        });
+        this._twoJumpBtn.addEventListener('click', () => {
+            this._twoJumpBtn.disabled = true;
+            this.twiceMoveField();
+            window.console.log(this._stepList);
+            Tween.get(this._playerContainer)
+                .to({x: this._playerContainer.x - 10}, 100)
+                .to({y: this._playerContainer.y - this.STEP_FIELD_HIGH * 5}, 200, Ease.cubicInOut)
+                .to({x: this._playerContainer.x, y: this.FIELD_POS.y + -this.STEP_FIELD_HIGH}, 300, Ease.cubicIn)
+                .call(() => {
+//                    Tween.removeTweens(this._playerContainer);
+//                    if (!this._stepList[1].isAshiba) {
+//                       Tween.get(this._playerContainer)
+//                            .to({y: 600}, 400);
+//                    } else {
+                        this._twoJumpBtn.disabled = false;
+//                    }
+                });
         });
     };
+// 跳躍後の足場生成
+    private reCreateStep = (i: number) => {
+        if (i === this._stepList.length - 1) {
+            const fadeOutStep = this._stepList[0];
+            this._stepList.shift();
+            this.setStepField();
+            this.gameStage.removeChild(fadeOutStep.step);
+        }
+    };
+//    一段とび
     private moveField = () => {
         this._stepList.forEach((v, i) => {
             Tween.get(v)
-                .to({x: v.x - this.FIELD_POS.x}, 600)
+                .to({x: v.step.x - this.FIELD_POS.x}, 600)
                 .call(() => {
-                    if (i === this._stepList.length - 1) {
-                        const fadeOutStep = this._stepList[0];
-                        this._stepList.shift();
-                        this.setStepField();
-                        this.gameStage.removeChild(fadeOutStep);
+                    this.reCreateStep(i);
+                });
+        });
+    };
+//    二段とび
+    private twiceMoveField = () => {
+        this._stepList.forEach((v, i) => {
+            Tween.get(v)
+                .to({x: v.step.x - this.FIELD_POS.x * 2}, 600)
+                .call(() => {
+                    this.reCreateStep(i);
+                    this.reCreateStep(i);
+                    if (i == this._stepList.length - 1) {
+                        this._stepList[this._stepList.length - 2].step.x -= this.FIELD_POS.x;
                     }
                 });
         });
