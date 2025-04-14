@@ -1,0 +1,25 @@
+{
+  "name": "game",
+  "version": "1.0.0",
+  "description": "",
+  "main": "Main.js",
+  "devDependencies": {
+    "@types/easeljs": "^1.0.5",
+    "ts-loader": "^9.5.1",
+    "typescript": "^5.4.2",
+    "webpack-cli": "^5.1.4",
+    "webpack-dev-server": "^5.0.3"
+  },
+  "scripts": {
+    "start": "webpack serve",
+    "build": "webpack"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@createjs/easeljs": "^2.0.0-beta.4",
+    "@createjs/tweenjs": "^2.0.0-beta.4",
+    "createjs-module": "^0.8.3"
+  }
+}

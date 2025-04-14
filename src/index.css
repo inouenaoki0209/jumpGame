@@ -1,0 +1,11 @@
+.oneStepBtn {
+    background-color: white;
+    color: black;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.oneStepBtn:hover {
+    background-color: black;
+    color: white;
+}
