@@ -2,10 +2,16 @@
 import {Stage, Shape, Ticker, Tween, Ease, Container} from 'createjs-module';
 import {stepColorChoiceRand} from './RandMarker';
 import * as trace_events from 'node:trace_events';
+import {coloType} from './Main';
 
-type StepColorType = 'brown' | 'green';
+namespace stepColor {
+  export type brown='#965042';
+  export type green='#3eb37000';
+}
+ const brown = '#965042';
+ const green = '#3eb37000';
+type StepColorType = stepColor.brown | stepColor.green;
 type StepType = { step: Container, isAshiba: boolean }
-
 export class GamePage extends Container {
     private readonly STEP_FIELD_WIDTH = 70;
     private readonly STEP_FIELD_HIGH = 20;
@@ -14,6 +20,7 @@ export class GamePage extends Container {
     private MAX_STEP_LEN = 9;
 //  背景
     private _bg: Shape = new Shape();
+    private _bgColor:string;
     private _canvas: HTMLCanvasElement;
     private gameStage: Stage;
     private _stepList: Array<StepType> = [];
@@ -23,18 +30,19 @@ export class GamePage extends Container {
     private _twoJumpBtn = document.getElementById('twoStepBtn') as HTMLButtonElement;
 //    ステップが穴あきならtrue;
     private _isBlankStep = false;
-    private STEP_COLOR: StepColorType = 'brown';
+    private STEP_COLOR: StepColorType = '#965042';
     private _isInit = true;
 
-    public constructor(canvas: HTMLCanvasElement) {
+    public constructor(canvas: HTMLCanvasElement,bgColor:string ) {
         super();
         this._canvas = canvas;
         this.gameStage = new Stage(this._canvas);
+        this._bgColor =bgColor;
     }
 
     public init = () => {
         this._stepList = [];
-        this._bg.graphics.beginFill('green').drawRect(0, 0, 640, 480);
+        this._bg.graphics.beginFill(this._bgColor).drawRect(0, 0, 640, 480);
         this._player.graphics.beginFill('yellow').drawCircle(0, 0, this.PLAYER_SIZE);
         this._playerContainer.addChild(this._player);
         this.gameStage.addChild(this._bg);
@@ -71,29 +79,29 @@ export class GamePage extends Container {
 // boolがすでにtrue(直前が空白)ならstep有を返す
                 if (this._isBlankStep) {
                     this._isBlankStep = false;
-                    return 'brown';
+                    return brown;
                 } else {
 // 初期位置を穴あきにさせない
                     if (this._isInit && index === 1) {
                         this._isBlankStep = false;
-                        return 'brown';
+                        return brown;
                     } else {
                         this._isBlankStep = true;
-                        return 'green';
+                        return green;
                     }
                 }
             } else {
                 this._isBlankStep = false;
-                return 'brown';
+                return brown;
             }
         };
         this.STEP_COLOR = createBlankStep();
         stepField.graphics.beginFill(this.STEP_COLOR).drawRect(0, 0, this.STEP_FIELD_WIDTH, this.STEP_FIELD_HIGH);
         stepContainer.addChild(stepField);
         this.gameStage.addChild(stepContainer);
-        if (this.STEP_COLOR === 'brown') {
+        if (this.STEP_COLOR === brown) {
             this._stepList.push({step: stepContainer, isAshiba: true});
-        } else if (this.STEP_COLOR === 'green') {
+        } else if (this.STEP_COLOR === green) {
             if (this._isInit && index === 1) {
                 this._stepList.push({step: stepContainer, isAshiba: true});
             } else {

@@ -4,8 +4,10 @@ exports.GamePage = void 0;
 //@ts-ignore
 const createjs_module_1 = require("createjs-module");
 const RandMarker_1 = require("./RandMarker");
+const brown = '#965042';
+const green = '#3eb37000';
 class GamePage extends createjs_module_1.Container {
-    constructor(canvas) {
+    constructor(canvas, bgColor) {
         super();
         this.STEP_FIELD_WIDTH = 70;
         this.STEP_FIELD_HIGH = 20;
@@ -21,11 +23,11 @@ class GamePage extends createjs_module_1.Container {
         this._twoJumpBtn = document.getElementById('twoStepBtn');
         //    ステップが穴あきならtrue;
         this._isBlankStep = false;
-        this.STEP_COLOR = 'brown';
+        this.STEP_COLOR = '#965042';
         this._isInit = true;
         this.init = () => {
             this._stepList = [];
-            this._bg.graphics.beginFill('green').drawRect(0, 0, 640, 480);
+            this._bg.graphics.beginFill(this._bgColor).drawRect(0, 0, 640, 480);
             this._player.graphics.beginFill('yellow').drawCircle(0, 0, this.PLAYER_SIZE);
             this._playerContainer.addChild(this._player);
             this.gameStage.addChild(this._bg);
@@ -55,33 +57,33 @@ class GamePage extends createjs_module_1.Container {
                     // boolがすでにtrue(直前が空白)ならstep有を返す
                     if (this._isBlankStep) {
                         this._isBlankStep = false;
-                        return 'brown';
+                        return brown;
                     }
                     else {
                         // 初期位置を穴あきにさせない
                         if (this._isInit && index === 1) {
                             this._isBlankStep = false;
-                            return 'brown';
+                            return brown;
                         }
                         else {
                             this._isBlankStep = true;
-                            return 'green';
+                            return green;
                         }
                     }
                 }
                 else {
                     this._isBlankStep = false;
-                    return 'brown';
+                    return brown;
                 }
             };
             this.STEP_COLOR = createBlankStep();
             stepField.graphics.beginFill(this.STEP_COLOR).drawRect(0, 0, this.STEP_FIELD_WIDTH, this.STEP_FIELD_HIGH);
             stepContainer.addChild(stepField);
             this.gameStage.addChild(stepContainer);
-            if (this.STEP_COLOR === 'brown') {
+            if (this.STEP_COLOR === brown) {
                 this._stepList.push({ step: stepContainer, isAshiba: true });
             }
-            else if (this.STEP_COLOR === 'green') {
+            else if (this.STEP_COLOR === green) {
                 if (this._isInit && index === 1) {
                     this._stepList.push({ step: stepContainer, isAshiba: true });
                 }
@@ -177,6 +179,7 @@ class GamePage extends createjs_module_1.Container {
         };
         this._canvas = canvas;
         this.gameStage = new createjs_module_1.Stage(this._canvas);
+        this._bgColor = bgColor;
     }
     run() {
         window.console.log('game開始');
