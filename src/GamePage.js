@@ -22,6 +22,7 @@ class GamePage extends createjs_module_1.Container {
         //    ステップが穴あきならtrue;
         this._isBlankStep = false;
         this.STEP_COLOR = 'brown';
+        this._isInit = true;
         this.init = () => {
             this._stepList = [];
             this._bg.graphics.beginFill('green').drawRect(0, 0, 640, 480);
@@ -29,13 +30,12 @@ class GamePage extends createjs_module_1.Container {
             this._playerContainer.addChild(this._player);
             this.gameStage.addChild(this._bg);
             this.setStepField();
+            this._isInit = false;
             this.gameStage.addChild(this._playerContainer);
             this._playerContainer.set({
                 x: this.FIELD_POS.x + this.STEP_FIELD_WIDTH / 2 + 10,
                 y: this.FIELD_POS.y + -this.STEP_FIELD_HIGH
             });
-            window.console.log(this.gameStage);
-            console.log('children:', this.gameStage.children);
             this.gameStage.update();
         };
         this.startTicker = () => {
@@ -58,8 +58,15 @@ class GamePage extends createjs_module_1.Container {
                         return 'brown';
                     }
                     else {
-                        this._isBlankStep = true;
-                        return 'green';
+                        // 初期位置を穴あきにさせない
+                        if (this._isInit && index === 1) {
+                            this._isBlankStep = false;
+                            return 'brown';
+                        }
+                        else {
+                            this._isBlankStep = true;
+                            return 'green';
+                        }
                     }
                 }
                 else {
@@ -75,7 +82,12 @@ class GamePage extends createjs_module_1.Container {
                 this._stepList.push({ step: stepContainer, isAshiba: true });
             }
             else if (this.STEP_COLOR === 'green') {
-                this._stepList.push({ step: stepContainer, isAshiba: false });
+                if (this._isInit && index === 1) {
+                    this._stepList.push({ step: stepContainer, isAshiba: true });
+                }
+                else {
+                    this._stepList.push({ step: stepContainer, isAshiba: false });
+                }
             }
             this._stepList[index].step.y = this.FIELD_POS.y;
             this._stepList[index].step.x = this.FIELD_POS.x * index + 10;
@@ -98,15 +110,16 @@ class GamePage extends createjs_module_1.Container {
                 createjs_module_1.Tween.get(this._playerContainer)
                     .to({ x: this._playerContainer.x - 10 }, 100)
                     .to({ y: this._playerContainer.y - this.STEP_FIELD_HIGH * 5 }, 200, createjs_module_1.Ease.cubicInOut)
-                    .to({ x: this._playerContainer.x, y: this.FIELD_POS.y + -this.STEP_FIELD_HIGH }, 300, createjs_module_1.Ease.cubicIn)
+                    .to({ x: this._playerContainer.x, y: this.FIELD_POS.y + -this.STEP_FIELD_HIGH }, 350, createjs_module_1.Ease.cubicIn)
                     .call(() => {
-                    //                    Tween.removeTweens(this._playerContainer);
-                    //                    if (!this._stepList[1].isAshiba) {
-                    //                        Tween.get(this._playerContainer)
-                    //                            .to({y: 600}, 400);
-                    //                    } else {
-                    this._oneJumpBtn.disabled = false;
-                    //                    }
+                    createjs_module_1.Tween.removeTweens(this._playerContainer);
+                    if (!this._stepList[1].isAshiba) {
+                        createjs_module_1.Tween.get(this._playerContainer)
+                            .to({ y: 600 }, 400);
+                    }
+                    else {
+                        this._oneJumpBtn.disabled = false;
+                    }
                 });
             });
             this._twoJumpBtn.addEventListener('click', () => {
@@ -116,15 +129,16 @@ class GamePage extends createjs_module_1.Container {
                 createjs_module_1.Tween.get(this._playerContainer)
                     .to({ x: this._playerContainer.x - 10 }, 100)
                     .to({ y: this._playerContainer.y - this.STEP_FIELD_HIGH * 5 }, 200, createjs_module_1.Ease.cubicInOut)
-                    .to({ x: this._playerContainer.x, y: this.FIELD_POS.y + -this.STEP_FIELD_HIGH }, 300, createjs_module_1.Ease.cubicIn)
+                    .to({ x: this._playerContainer.x, y: this.FIELD_POS.y + -this.STEP_FIELD_HIGH }, 350, createjs_module_1.Ease.cubicIn)
                     .call(() => {
-                    //                    Tween.removeTweens(this._playerContainer);
-                    //                    if (!this._stepList[1].isAshiba) {
-                    //                       Tween.get(this._playerContainer)
-                    //                            .to({y: 600}, 400);
-                    //                    } else {
-                    this._twoJumpBtn.disabled = false;
-                    //                    }
+                    createjs_module_1.Tween.removeTweens(this._playerContainer);
+                    if (!this._stepList[1].isAshiba) {
+                        createjs_module_1.Tween.get(this._playerContainer)
+                            .to({ y: 600 }, 400);
+                    }
+                    else {
+                        this._twoJumpBtn.disabled = false;
+                    }
                 });
             });
         };
@@ -140,7 +154,7 @@ class GamePage extends createjs_module_1.Container {
         //    一段とび
         this.moveField = () => {
             this._stepList.forEach((v, i) => {
-                createjs_module_1.Tween.get(v)
+                createjs_module_1.Tween.get(v.step)
                     .to({ x: v.step.x - this.FIELD_POS.x }, 600)
                     .call(() => {
                     this.reCreateStep(i);
@@ -150,7 +164,7 @@ class GamePage extends createjs_module_1.Container {
         //    二段とび
         this.twiceMoveField = () => {
             this._stepList.forEach((v, i) => {
-                createjs_module_1.Tween.get(v)
+                createjs_module_1.Tween.get(v.step)
                     .to({ x: v.step.x - this.FIELD_POS.x * 2 }, 600)
                     .call(() => {
                     this.reCreateStep(i);

@@ -4,7 +4,7 @@ import {stepColorChoiceRand} from './RandMarker';
 import * as trace_events from 'node:trace_events';
 
 type StepColorType = 'brown' | 'green';
-type stepType = { step: Container, isAshiba: boolean }
+type StepType = { step: Container, isAshiba: boolean }
 
 export class GamePage extends Container {
     private readonly STEP_FIELD_WIDTH = 70;
@@ -16,7 +16,7 @@ export class GamePage extends Container {
     private _bg: Shape = new Shape();
     private _canvas: HTMLCanvasElement;
     private gameStage: Stage;
-    private _stepList: Array<stepType> = [];
+    private _stepList: Array<StepType> = [];
     private _player = new Shape();
     private _playerContainer = new Container();
     private _oneJumpBtn = document.getElementById('oneStepBtn') as HTMLButtonElement;
@@ -24,6 +24,7 @@ export class GamePage extends Container {
 //    ステップが穴あきならtrue;
     private _isBlankStep = false;
     private STEP_COLOR: StepColorType = 'brown';
+    private _isInit = true;
 
     public constructor(canvas: HTMLCanvasElement) {
         super();
@@ -38,13 +39,12 @@ export class GamePage extends Container {
         this._playerContainer.addChild(this._player);
         this.gameStage.addChild(this._bg);
         this.setStepField();
+        this._isInit = false;
         this.gameStage.addChild(this._playerContainer);
         this._playerContainer.set({
             x: this.FIELD_POS.x + this.STEP_FIELD_WIDTH / 2 + 10,
             y: this.FIELD_POS.y + -this.STEP_FIELD_HIGH
         });
-        window.console.log(this.gameStage);
-        console.log('children:', this.gameStage.children);
         this.gameStage.update();
     };
 
@@ -73,8 +73,14 @@ export class GamePage extends Container {
                     this._isBlankStep = false;
                     return 'brown';
                 } else {
-                    this._isBlankStep = true;
-                    return 'green';
+// 初期位置を穴あきにさせない
+                    if (this._isInit && index === 1) {
+                        this._isBlankStep = false;
+                        return 'brown';
+                    } else {
+                        this._isBlankStep = true;
+                        return 'green';
+                    }
                 }
             } else {
                 this._isBlankStep = false;
@@ -88,7 +94,11 @@ export class GamePage extends Container {
         if (this.STEP_COLOR === 'brown') {
             this._stepList.push({step: stepContainer, isAshiba: true});
         } else if (this.STEP_COLOR === 'green') {
-            this._stepList.push({step: stepContainer, isAshiba: false});
+            if (this._isInit && index === 1) {
+                this._stepList.push({step: stepContainer, isAshiba: true});
+            } else {
+                this._stepList.push({step: stepContainer, isAshiba: false});
+            }
         }
         this._stepList[index].step.y = this.FIELD_POS.y;
         this._stepList[index].step.x = this.FIELD_POS.x * index + 10;
@@ -112,15 +122,15 @@ export class GamePage extends Container {
             Tween.get(this._playerContainer)
                 .to({x: this._playerContainer.x - 10}, 100)
                 .to({y: this._playerContainer.y - this.STEP_FIELD_HIGH * 5}, 200, Ease.cubicInOut)
-                .to({x: this._playerContainer.x, y: this.FIELD_POS.y + -this.STEP_FIELD_HIGH}, 300, Ease.cubicIn)
+                .to({x: this._playerContainer.x, y: this.FIELD_POS.y + -this.STEP_FIELD_HIGH}, 350, Ease.cubicIn)
                 .call(() => {
-//                    Tween.removeTweens(this._playerContainer);
-//                    if (!this._stepList[1].isAshiba) {
-//                        Tween.get(this._playerContainer)
-//                            .to({y: 600}, 400);
-//                    } else {
+                    Tween.removeTweens(this._playerContainer);
+                    if (!this._stepList[1].isAshiba) {
+                        Tween.get(this._playerContainer)
+                            .to({y: 600}, 400);
+                    } else {
                         this._oneJumpBtn.disabled = false;
-//                    }
+                    }
                 });
         });
         this._twoJumpBtn.addEventListener('click', () => {
@@ -130,15 +140,15 @@ export class GamePage extends Container {
             Tween.get(this._playerContainer)
                 .to({x: this._playerContainer.x - 10}, 100)
                 .to({y: this._playerContainer.y - this.STEP_FIELD_HIGH * 5}, 200, Ease.cubicInOut)
-                .to({x: this._playerContainer.x, y: this.FIELD_POS.y + -this.STEP_FIELD_HIGH}, 300, Ease.cubicIn)
+                .to({x: this._playerContainer.x, y: this.FIELD_POS.y + -this.STEP_FIELD_HIGH}, 350, Ease.cubicIn)
                 .call(() => {
-//                    Tween.removeTweens(this._playerContainer);
-//                    if (!this._stepList[1].isAshiba) {
-//                       Tween.get(this._playerContainer)
-//                            .to({y: 600}, 400);
-//                    } else {
+                    Tween.removeTweens(this._playerContainer);
+                    if (!this._stepList[1].isAshiba) {
+                        Tween.get(this._playerContainer)
+                            .to({y: 600}, 400);
+                    } else {
                         this._twoJumpBtn.disabled = false;
-//                    }
+                    }
                 });
         });
     };
@@ -154,7 +164,7 @@ export class GamePage extends Container {
 //    一段とび
     private moveField = () => {
         this._stepList.forEach((v, i) => {
-            Tween.get(v)
+            Tween.get(v.step)
                 .to({x: v.step.x - this.FIELD_POS.x}, 600)
                 .call(() => {
                     this.reCreateStep(i);
@@ -164,7 +174,7 @@ export class GamePage extends Container {
 //    二段とび
     private twiceMoveField = () => {
         this._stepList.forEach((v, i) => {
-            Tween.get(v)
+            Tween.get(v.step)
                 .to({x: v.step.x - this.FIELD_POS.x * 2}, 600)
                 .call(() => {
                     this.reCreateStep(i);
