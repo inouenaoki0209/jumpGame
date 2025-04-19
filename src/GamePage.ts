@@ -1,29 +1,28 @@
 //@ts-ignore
 import {Stage, Shape, Ticker, Tween, Ease, Container} from 'createjs-module';
-import {stepColorChoiceRand} from './RandMarker';
-import * as trace_events from 'node:trace_events';
-import {coloType} from './Main';
 import {Player} from './Player';
 import {StepField} from './stepField';
+import {GameTimer} from './GameTimer';
+import {EventEmitter} from './module/EventEmitter';
 
 namespace stepColor {
     export type brown = '#965042';
-    export type red = '#FF0000';
 }
+export type StepState = 'none' | 'enemy' | 'item'
+
+
 export const brown = '#965042';
-export const red = '#FF0000';
-export type StepColorType = stepColor.brown | stepColor.red;
-export type StepType = { step: Container, isTrap: boolean, enemy?: Shape }
+export type StepColorType = stepColor.brown
+export type StepType = { step: Container, state: StepState, addItem?: Shape }
 export const STEP_FIELD_WIDTH = 70;
 export const STEP_FIELD_HIGH = 20;
 export const FIELD_POS = {x: 90, y: 370};
 export const PLAYER_SIZE = 20;
 export const MAX_STEP_LEN = 10;
+//ゲームの制限時間タイマー
+export const GAME_LIMIT = 60;
 
 export class GamePage extends Container {
-    private readonly STEP_FIELD_WIDTH = 70;
-    private readonly STEP_FIELD_HIGH = 20;
-    private readonly FIELD_POS = {x: 90, y: 370};
 //  背景
     private _bg: Shape = new Shape();
     private _bgColor: string;
@@ -31,11 +30,10 @@ export class GamePage extends Container {
     private gameStage: Stage;
     private _stepField: StepField;
     private _stepList: Array<StepType> = [];
-
+    private _timer: GameTimer;
     private playerManager: Player;
-
-
     private _isInit = true;
+    private timerUI = document.getElementById('timer') as HTMLElement;
 
     public constructor(canvas: HTMLCanvasElement, bgColor: string) {
         super();
@@ -43,8 +41,9 @@ export class GamePage extends Container {
         this.gameStage = new Stage(this._canvas);
         this._bgColor = bgColor;
         this._stepField = new StepField(this.gameStage, this._stepList, this._isInit);
-        this.playerManager = new Player(this.gameStage, this._stepList, this._stepField);
-        window.console.log('リファクタリングしたよ')
+        this._timer = new GameTimer(GAME_LIMIT);
+        this.playerManager = new Player(this.gameStage, this._stepList, this._stepField, this._timer);
+        EventEmitter.getInstance().addEventLister('GameOver', this.gameEnd);
     }
 
     public init = () => {
@@ -59,10 +58,23 @@ export class GamePage extends Container {
     };
 
     public run() {
-        window.console.log('kanntgfdgdou');
         this.playerManager.run();
+        EventEmitter.getInstance().addEventLister('Tick', () => {
+            window.console.log('今', this._timer.getTimeLeft());
+            if (this.timerUI.textContent) {
+                this.timerUI.textContent = `残り時間 : ${this._timer.getTimeLeft()}秒`;
+            }
+        });
+        this._timer.start();
     }
 
+    private gameEnd = () => {
+        window.console.log('時間切れ');
+        if (this.timerUI.textContent) {
+            this.timerUI.textContent = 'ゲームオーバー！';
+        }
+        this.playerManager.end();
+    };
     public startTicker = () => {
         Ticker.framerate = 60;
         Ticker.addEventListener('tick', this._tick);

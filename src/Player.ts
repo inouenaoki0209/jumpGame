@@ -1,6 +1,7 @@
 import {Container, Ease, Shape, Stage, Tween} from 'createjs-module';
 import {FIELD_POS, PLAYER_SIZE, STEP_FIELD_HIGH, STEP_FIELD_WIDTH, StepType} from './GamePage';
 import {StepField} from './stepField';
+import {GameTimer} from './GameTimer';
 
 
 export class Player {
@@ -8,13 +9,18 @@ export class Player {
     private _playerContainer = new Container();
     private _stage: Stage;
     private _stepList: Array<StepType>;
-    private _stepField: StepField
+    private _stepField: StepField;
     private _oneJumpBtn = document.getElementById('oneStepBtn') as HTMLButtonElement;
     private _twoJumpBtn = document.getElementById('twoStepBtn') as HTMLButtonElement;
-    public constructor(stage: Stage,stepList: Array<StepType>,stepField: StepField) {
+    private _timer: GameTimer;
+    private _totalDistance = 0;
+    private _totalDistanceText = document.getElementById('totalDistance') as HTMLElement;
+
+    public constructor(stage: Stage, stepList: Array<StepType>, stepField: StepField, timer: GameTimer) {
         this._stage = stage;
         this._stepList = stepList;
-        this._stepField = stepField
+        this._stepField = stepField;
+        this._timer = timer;
     }
 
     public init() {
@@ -26,68 +32,88 @@ export class Player {
             y: FIELD_POS.y + -STEP_FIELD_HIGH
         });
     }
-    public run = ()=>{
-        this.playerJumpEvent()
-    }
+
+    public end = () => {
+        this.disAbleBtnClick();
+        this._oneJumpBtn.removeEventListener('click', this.oneJumpClick);
+        this._twoJumpBtn.removeEventListener('click', this.twoJumpClick);
+    };
+    public run = () => {
+        this.playerJumpEvent();
+    };
+
+    private disAbleBtnClick = () => {
+        this._oneJumpBtn.disabled = true;
+        this._twoJumpBtn.disabled = true;
+    };
+    private permitBtnClick = () => {
+        this._oneJumpBtn.disabled = false;
+        this._twoJumpBtn.disabled = false;
+    };
+    private jumpAfter = () => {
+        Tween.removeTweens(this._playerContainer);
+        if (this._stepList[1].state === 'enemy') {
+            if (this._stepList[1].addItem) {
+                this._stepList[1].step.removeChild(this._stepList[1].addItem);
+                window.console.log('stop');
+                setTimeout(() => {
+                    window.console.log('reStart');
+                    this.permitBtnClick();
+                }, 2000);
+            } else {
+                throw Error('トラップがないような');
+            }
+        } else if (this._stepList[1].state === 'item') {
+//            お助けアイテム獲得
+            if (this._stepList[1].addItem) {
+                this._stepList[1].step.removeChild(this._stepList[1].addItem);
+            }
+//            3秒追加
+            this._timer.addTime(3);
+            this.permitBtnClick();
+        } else {
+            this.permitBtnClick();
+        }
+    };
+    private oneJumpClick = () => {
+        this.disAbleBtnClick();
+        this.moveField();
+        window.console.log(this._stepList);
+        Tween.get(this._playerContainer)
+            .to({x: this._playerContainer.x - 10}, 100)
+            .to({y: this._playerContainer.y - STEP_FIELD_HIGH * 5}, 200, Ease.cubicInOut)
+            .to({x: this._playerContainer.x, y: FIELD_POS.y + -STEP_FIELD_HIGH}, 350, Ease.cubicIn)
+            .call(() => {
+                this.jumpAfter();
+                this._totalDistance += 1;
+                if (this._totalDistanceText.textContent) {
+                    this._totalDistanceText.textContent = `現在 : ${this._totalDistance} M`;
+                }
+            });
+    };
+    private twoJumpClick = () => {
+        this.disAbleBtnClick();
+        this.twiceMoveField();
+        Tween.get(this._playerContainer)
+            .to({x: this._playerContainer.x - 10}, 100)
+            .to({y: this._playerContainer.y - STEP_FIELD_HIGH * 5}, 200, Ease.cubicInOut)
+            .to({x: this._playerContainer.x, y: FIELD_POS.y + -STEP_FIELD_HIGH}, 350, Ease.cubicIn)
+            .call(() => {
+                this.jumpAfter();
+                this._totalDistance += 2;
+                if (this._totalDistanceText.textContent) {
+                    this._totalDistanceText.textContent = `現在 : ${this._totalDistance} M`;
+                }
+            });
+    };
     private playerJumpEvent = () => {
-        this._oneJumpBtn.addEventListener('click', () => {
-            this._oneJumpBtn.disabled = true;
-            this.moveField();
-            window.console.log(this._stepList);
-            Tween.get(this._playerContainer)
-                .to({x: this._playerContainer.x - 10}, 100)
-                .to({y: this._playerContainer.y - STEP_FIELD_HIGH * 5}, 200, Ease.cubicInOut)
-                .to({x: this._playerContainer.x, y: FIELD_POS.y + -STEP_FIELD_HIGH}, 350, Ease.cubicIn)
-                .call(() => {
-                    Tween.removeTweens(this._playerContainer);
-                    if (!this._stepList[1].isTrap) {
-                        if (this._stepList[1].enemy) {
-                            this._stepList[1].step.removeChild(this._stepList[1].enemy);
-                            setTimeout(() => {
-                                this._oneJumpBtn.disabled = false;
-                                this._twoJumpBtn.disabled = false;
-                            }, 2000);
-                        } else {
-                            throw Error('トラップがないような');
-                        }
-                    } else {
-                        this._oneJumpBtn.disabled = false;
-                        this._twoJumpBtn.disabled = false;
-                    }
-                });
-        });
-        this._twoJumpBtn.addEventListener('click', () => {
-            this._twoJumpBtn.disabled = true;
-            this.twiceMoveField();
-            window.console.log(this._stepList);
-            Tween.get(this._playerContainer)
-                .to({x: this._playerContainer.x - 10}, 100)
-                .to({y: this._playerContainer.y - STEP_FIELD_HIGH * 5}, 200, Ease.cubicInOut)
-                .to({x: this._playerContainer.x, y: FIELD_POS.y + -STEP_FIELD_HIGH}, 350, Ease.cubicIn)
-                .call(() => {
-                    Tween.removeTweens(this._playerContainer);
-                    if (!this._stepList[1].isTrap) {
-                        if (this._stepList[1].enemy) {
-                            this._stepList[1].step.removeChild(this._stepList[1].enemy);
-                            setTimeout(() => {
-                                this._oneJumpBtn.disabled = false;
-                                this._twoJumpBtn.disabled = false;
-                            }, 2000);
-                        } else {
-                            throw Error('トラップがないような');
-                        }
-                    } else {
-                        this._oneJumpBtn.disabled = false;
-                        this._twoJumpBtn.disabled = false;
-                    }
-                });
-        });
+        this._oneJumpBtn.addEventListener('click', this.oneJumpClick);
+        this._twoJumpBtn.addEventListener('click', this.twoJumpClick);
     };
     /**
      * プレイヤージャンプ
      * 一段とび/二段とび
      */
-
         //    一段とび
     private moveField = () => {
         this._stepList.forEach((v, i) => {
