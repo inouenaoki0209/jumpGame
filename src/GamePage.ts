@@ -5,13 +5,14 @@ import * as trace_events from 'node:trace_events';
 import {coloType} from './Main';
 
 namespace stepColor {
-  export type brown='#965042';
-  export type green='#3eb37000';
+    export type brown = '#965042';
+    export type red = '#FF0000';
 }
- const brown = '#965042';
- const green = '#3eb37000';
-type StepColorType = stepColor.brown | stepColor.green;
-type StepType = { step: Container, isAshiba: boolean }
+const brown = '#965042';
+const red = '#FF0000';
+type StepColorType = stepColor.brown | stepColor.red;
+type StepType = { step: Container, isTrap: boolean, enemy?: Shape }
+
 export class GamePage extends Container {
     private readonly STEP_FIELD_WIDTH = 70;
     private readonly STEP_FIELD_HIGH = 20;
@@ -20,7 +21,7 @@ export class GamePage extends Container {
     private MAX_STEP_LEN = 9;
 //  背景
     private _bg: Shape = new Shape();
-    private _bgColor:string;
+    private _bgColor: string;
     private _canvas: HTMLCanvasElement;
     private gameStage: Stage;
     private _stepList: Array<StepType> = [];
@@ -33,11 +34,11 @@ export class GamePage extends Container {
     private STEP_COLOR: StepColorType = '#965042';
     private _isInit = true;
 
-    public constructor(canvas: HTMLCanvasElement,bgColor:string ) {
+    public constructor(canvas: HTMLCanvasElement, bgColor: string) {
         super();
         this._canvas = canvas;
         this.gameStage = new Stage(this._canvas);
-        this._bgColor =bgColor;
+        this._bgColor = bgColor;
     }
 
     public init = () => {
@@ -57,7 +58,7 @@ export class GamePage extends Container {
     };
 
     public run() {
-        window.console.log('game開始');
+        window.console.log('kanntgfdgdou');
         this.playerJumpEvent();
     }
 
@@ -73,6 +74,7 @@ export class GamePage extends Container {
     private createStepField = (index: number) => {
         const stepContainer = new Container();
         const stepField = new Shape();
+        const enemy = new Shape();
         const createBlankStep = (): StepColorType => {
 // ランダム値が0なら空白stepを作成
             if (!stepColorChoiceRand()) {
@@ -87,7 +89,7 @@ export class GamePage extends Container {
                         return brown;
                     } else {
                         this._isBlankStep = true;
-                        return green;
+                        return red;
                     }
                 }
             } else {
@@ -97,15 +99,18 @@ export class GamePage extends Container {
         };
         this.STEP_COLOR = createBlankStep();
         stepField.graphics.beginFill(this.STEP_COLOR).drawRect(0, 0, this.STEP_FIELD_WIDTH, this.STEP_FIELD_HIGH);
+        enemy.graphics.beginFill('blue').drawCircle(0, 0, 15);
         stepContainer.addChild(stepField);
         this.gameStage.addChild(stepContainer);
         if (this.STEP_COLOR === brown) {
-            this._stepList.push({step: stepContainer, isAshiba: true});
-        } else if (this.STEP_COLOR === green) {
+            this._stepList.push({step: stepContainer, isTrap: true});
+        } else if (this.STEP_COLOR === red) {
             if (this._isInit && index === 1) {
-                this._stepList.push({step: stepContainer, isAshiba: true});
+                this._stepList.push({step: stepContainer, isTrap: true});
             } else {
-                this._stepList.push({step: stepContainer, isAshiba: false});
+                stepContainer.addChild(enemy);
+                enemy.set({x: 35, y: -16});
+                this._stepList.push({step: stepContainer, isTrap: false, enemy: enemy});
             }
         }
         this._stepList[index].step.y = this.FIELD_POS.y;
@@ -133,11 +138,19 @@ export class GamePage extends Container {
                 .to({x: this._playerContainer.x, y: this.FIELD_POS.y + -this.STEP_FIELD_HIGH}, 350, Ease.cubicIn)
                 .call(() => {
                     Tween.removeTweens(this._playerContainer);
-                    if (!this._stepList[1].isAshiba) {
-                        Tween.get(this._playerContainer)
-                            .to({y: 600}, 400);
+                    if (!this._stepList[1].isTrap) {
+                        if (this._stepList[1].enemy) {
+                            this._stepList[1].step.removeChild(this._stepList[1].enemy);
+                            setTimeout(() => {
+                                this._oneJumpBtn.disabled = false;
+                                this._twoJumpBtn.disabled = false;
+                            }, 2000);
+                        } else {
+                            throw Error('トラップがないような');
+                        }
                     } else {
                         this._oneJumpBtn.disabled = false;
+                        this._twoJumpBtn.disabled = false;
                     }
                 });
         });
@@ -151,10 +164,18 @@ export class GamePage extends Container {
                 .to({x: this._playerContainer.x, y: this.FIELD_POS.y + -this.STEP_FIELD_HIGH}, 350, Ease.cubicIn)
                 .call(() => {
                     Tween.removeTweens(this._playerContainer);
-                    if (!this._stepList[1].isAshiba) {
-                        Tween.get(this._playerContainer)
-                            .to({y: 600}, 400);
+                    if (!this._stepList[1].isTrap) {
+                        if (this._stepList[1].enemy) {
+                            this._stepList[1].step.removeChild(this._stepList[1].enemy);
+                            setTimeout(() => {
+                                this._oneJumpBtn.disabled = false;
+                                this._twoJumpBtn.disabled = false;
+                            }, 2000);
+                        } else {
+                            throw Error('トラップがないような');
+                        }
                     } else {
+                        this._oneJumpBtn.disabled = false;
                         this._twoJumpBtn.disabled = false;
                     }
                 });

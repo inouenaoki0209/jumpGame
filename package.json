@@ -5,6 +5,7 @@
   "main": "Main.js",
   "devDependencies": {
     "@types/easeljs": "^1.0.5",
+    "html-webpack-plugin": "^5.6.3",
     "ts-loader": "^9.5.1",
     "typescript": "^5.4.2",
     "webpack-cli": "^5.1.4",
