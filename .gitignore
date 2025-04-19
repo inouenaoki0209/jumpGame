@@ -19,11 +19,6 @@ Thumbs.db
 .env.local
 .env.*.local
 
-# バンドル・ビルド関連
-dist/
-build/
-out/
-
 # キャッシュ系
 .cache/
 .next/
