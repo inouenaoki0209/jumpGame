@@ -92,7 +92,6 @@ export class StepField {
         this._stage.addChild(stepContainer);
 
         const decidedItem = fieldChoice();
-        window.console.log(decidedItem, 'が選択されました');
         if (decidedItem === 'none') {
             this._stepList.push({step: stepContainer, state: 'none'});
         } else if (decidedItem === 'enemy') {

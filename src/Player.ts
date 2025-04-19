@@ -55,9 +55,7 @@ export class Player {
         if (this._stepList[1].state === 'enemy') {
             if (this._stepList[1].addItem) {
                 this._stepList[1].step.removeChild(this._stepList[1].addItem);
-                window.console.log('stop');
                 setTimeout(() => {
-                    window.console.log('reStart');
                     this.permitBtnClick();
                 }, 2000);
             } else {
@@ -78,7 +76,6 @@ export class Player {
     private oneJumpClick = () => {
         this.disAbleBtnClick();
         this.moveField();
-        window.console.log(this._stepList);
         Tween.get(this._playerContainer)
             .to({x: this._playerContainer.x - 10}, 100)
             .to({y: this._playerContainer.y - STEP_FIELD_HIGH * 5}, 200, Ease.cubicInOut)
