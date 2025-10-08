@@ -1,5 +1,8 @@
 //@ts-ignore
 import {Stage, Shape, Ticker, Tween, Ease, Container} from 'createjs-module';
+import {stepColorChoiceRand} from './RandMarker';
+import * as trace_events from 'node:trace_events';
+import {coloType, showResultScreen} from './Main';
 import {Player} from './Player';
 import {StepField} from './stepField';
 import {GameTimer} from './GameTimer';
@@ -19,8 +22,6 @@ export const STEP_FIELD_HIGH = 20;
 export const FIELD_POS = {x: 90, y: 370};
 export const PLAYER_SIZE = 20;
 export const MAX_STEP_LEN = 10;
-//ゲームの制限時間タイマー
-export const GAME_LIMIT = 60;
 
 export class GamePage extends Container {
 //  背景
@@ -41,7 +42,7 @@ export class GamePage extends Container {
         this.gameStage = new Stage(this._canvas);
         this._bgColor = bgColor;
         this._stepField = new StepField(this.gameStage, this._stepList, this._isInit);
-        this._timer = new GameTimer(GAME_LIMIT);
+        this._timer = new GameTimer(60);
         this.playerManager = new Player(this.gameStage, this._stepList, this._stepField, this._timer);
         EventEmitter.getInstance().addEventLister('GameOver', this.gameEnd);
     }
@@ -62,18 +63,28 @@ export class GamePage extends Container {
         EventEmitter.getInstance().addEventLister('Tick', () => {
             window.console.log('今', this._timer.getTimeLeft());
             if (this.timerUI.textContent) {
-                this.timerUI.textContent = `残り時間 : ${this._timer.getTimeLeft()}秒`;
+                this.timerUI.textContent = `残り ${this._timer.getTimeLeft()}秒です`;
             }
+
         });
         this._timer.start();
     }
 
-    private gameEnd = () => {
+    private _timeOutAsync = async (time: number) => {
+        const timer = () =>
+            new Promise((resolve, reject) => {
+                setTimeout(() => {
+                    resolve(resolve);
+                }, time);
+            });
+        return timer();
+    };
+    private gameEnd = async () => {
         window.console.log('時間切れ');
-        if (this.timerUI.textContent) {
-            this.timerUI.textContent = 'ゲームオーバー！';
-        }
-        this.playerManager.end();
+        this.playerManager.removeClickEvent();
+        await this._timeOutAsync(1000);
+        this.playerManager.destroy();
+        showResultScreen(this.playerManager._totalDistance);
     };
     public startTicker = () => {
         Ticker.framerate = 60;

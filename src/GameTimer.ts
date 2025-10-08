@@ -1,4 +1,5 @@
 import {EventEmitter} from './module/EventEmitter';
+import {showResultScreen} from './Main';
 
 export class GameTimer {
     private timeLeft: number;

@@ -52,13 +52,13 @@ export class StepField {
         // 障害物作成
         const createItem = (): StepState => {
             // ランダム値設定
-            const rand = secondRand();
+            const rand = stepColorChoiceRand();
             const getLatestStepList = () => this._stepList;
             // ランダム値が1かつリスト内にアイテムがいないならアイテム生成
             // お助けアイテム生成
             const itemSearch = getLatestStepList().find((step) => step.state === 'item');
             const enemySearch = getLatestStepList().find((step) => step.state !== 'enemy');
-            if (rand === 1) {
+            if (rand === 2) {
                 // 初回のプレイヤー位置にはアイテムを返さない
                 if (this._isInit && index === 1) {
                     return 'none';
@@ -69,7 +69,7 @@ export class StepField {
                         return 'none';
                     }
                 }
-            } else if (!rand) {
+            } else if (0||1) {
                 // ランダム値が0の時
                 // 直前が障害物でないなら障害物生成
                 if (this._isInit && index === 1) {

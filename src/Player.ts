@@ -13,7 +13,7 @@ export class Player {
     private _oneJumpBtn = document.getElementById('oneStepBtn') as HTMLButtonElement;
     private _twoJumpBtn = document.getElementById('twoStepBtn') as HTMLButtonElement;
     private _timer: GameTimer;
-    private _totalDistance = 0;
+    public _totalDistance = 0;
     private _totalDistanceText = document.getElementById('totalDistance') as HTMLElement;
 
     public constructor(stage: Stage, stepList: Array<StepType>, stepField: StepField, timer: GameTimer) {
@@ -33,11 +33,12 @@ export class Player {
         });
     }
 
-    public end = () => {
+    public removeClickEvent() {
         this.disAbleBtnClick();
         this._oneJumpBtn.removeEventListener('click', this.oneJumpClick);
         this._twoJumpBtn.removeEventListener('click', this.twoJumpClick);
-    };
+    }
+
     public run = () => {
         this.playerJumpEvent();
     };
@@ -143,5 +144,10 @@ export class Player {
             this._stepField.setStepField();
             this._stage.removeChild(fadeOutStep.step);
         }
+    };
+
+    public destroy = () => {
+        this._playerContainer.removeChild(this._player);
+        this._stage.removeAllChildren();
     };
 }
