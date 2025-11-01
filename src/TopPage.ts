@@ -1,26 +1,29 @@
-import bunny　from './design/top/B_2_title-bunny.png';
-import {Container, Stage} from 'createjs-module';
-export class TopPage extends Container{
-    private bunny:createjs.Bitmap = new createjs.Bitmap(bunny);
-    private _canvas: HTMLCanvasElement;
-    private gameStage: Stage;
+import bunny from './design/top/B_2_title-bunny.png';
+import cell from './design/top/C_2_title-scaffolding.png';
 
-    public constructor(canvas: HTMLCanvasElement) {
-        super();
-        this._canvas = canvas;
-        this.gameStage = new Stage(this._canvas);
-        this.createImage(bunny,this.bunny)
+export class TopPage extends createjs.Container {
+    private STAGE_VOLUME = 5;
+
+    public async init(): Promise<void> {
+        const bunnyBmp = await this.loadBitmap(bunny);
+        this.addChild(bunnyBmp); // ← Stageではなく自分自身に addChild
+
+        const cells = await Promise.all(
+            Array.from({ length: this.STAGE_VOLUME }, () => this.loadBitmap(cell))
+        );
+        cells.forEach((bmp, i) => {
+            bmp.x = i * 64;
+            bmp.y = 100;
+            this.addChild(bmp);
+        });
     }
 
-    private createImage(image: string,bitmap: createjs.Bitmap) {
-        const img = new Image();
-        img.src = image;
-        img.onload = () => {
-            bitmap= new createjs.Bitmap(img);
-            this.gameStage.addChild(bitmap);
-        };
-    }
-    public init(){
-        this.stage.update()
+    private loadBitmap(url: string): Promise<createjs.Bitmap> {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => resolve(new createjs.Bitmap(img));
+            img.onerror = reject;
+            img.src = url;
+        });
     }
 }

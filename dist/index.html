@@ -11,28 +11,26 @@
 
         #game-container {
             position: relative;
-            width: 640px;
-            height: 480px;
+            width: 602px;
+            height: 280px;
             margin: 20px auto;
-            background: #eee;
+            background: #F4E511;
         }
 
-        canvas#game {
-            display: block;
-            width: 100%;
-            height: 100%;
-            background: white;
-        }
+        /*canvas#game {*/
+        /*    display: block;*/
+        /*    width: 100%;*/
+        /*    height: 100%;*/
+        /*    background: white;*/
+        /*}*/
 
         .screen {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 255, 255, 0.9);
+            position: relative;
+            width: 602px;
+            height: 280px;
+            margin: 0 auto;
+            background: rgba(244, 229, 17, 1); /* ← alpha=1 そのまま */
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
         }
@@ -42,8 +40,10 @@
         }
 
         #game {
-            display: block;
-            background: #eee;
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
         }
 
         .timer {
@@ -129,7 +129,7 @@
             color: black;
             cursor: pointer;
             transition: all 0.3s;
-            top: 290px;
+            top: 40px;
             left: 260px;
             width: 100px;
             height: 40px;
@@ -139,17 +139,24 @@
             background-color: black;
             color: white;
         }
+        #start-screen canvas#game {
+            position: absolute;
+            inset: 0;
+            z-index: 2; /* ← ここを大きくして前面に */
+            pointer-events: none; /* ← ボタンをクリックできるように */
+        }
     </style>
+    <script src="https://code.createjs.com/1.0.0/createjs.min.js"></script>
 </head>
 <body>
-<div id="game-container" style="position: relative; width: 640px; height: 480px; margin: 0 auto;">
-    <canvas id="game" width="640" height="480"></canvas>
+<div id="game-container" style="position: relative; width: 602px; height: 280px; margin: 0 auto;">
 
     <!-- スタート画面 -->
     <div id="start-screen" class="screen">
         <h1>ゲームスタート</h1>
         <button class="startBtn" id="startBtn">スタート</button>
     </div>
+        <canvas id="game" width="602" height="280"></canvas>
     <div id="game-ui" class='hidden'>
         <div class="timer" id="timer">残り時間 : 60秒</div>
         <div class="totalDistance" id="totalDistance">現在 : 0 M</div>

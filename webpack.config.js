@@ -24,6 +24,11 @@ module.exports = {
                 test: /\.ts$/,
                 loader:"ts-loader",
                 exclude: /node_modules/,
+            },
+            {
+                test: /\.(png|jpe?g|gif|svg)$/i,
+                type: 'asset/resource',                 // ← これでOK（file-loader不要）
+                generator: { filename: 'assets/[name][ext]' } // 出力先（任意）
             }
         ]
     }

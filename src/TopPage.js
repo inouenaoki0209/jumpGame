@@ -4,7 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.TopPage = void 0;
-const B_2_title_bunny_png_1 = __importDefault(require("../design/top/B_2_title-bunny.png"));
+const B_2_title_bunny_png_1 = __importDefault(require("./design/top/B_2_title-bunny.png"));
 const createjs_module_1 = require("createjs-module");
 class TopPage extends createjs_module_1.Container {
     bunny = new createjs.Bitmap(B_2_title_bunny_png_1.default);
